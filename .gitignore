@@ -27,10 +27,20 @@ Thumbs.db
 .env
 config.json
 
-# 决策日志
+# 决策日志和状态数据
 decision_logs/
 coin_pool_cache/
+trader_states/
 nofx_test
+
+# 数据库文件（包含配置）
+*.db
+*.db-shm
+*.db-wal
+
+# 备份文件
+position_backup*.json
+position_backup*.txt
 
 # Node.js
 web/node_modules/
