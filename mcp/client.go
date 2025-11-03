@@ -36,7 +36,7 @@ func New() *Client {
 		Provider: ProviderDeepSeek,
 		BaseURL:  "https://api.deepseek.com/v1",
 		Model:    "deepseek-chat",
-		Timeout:  120 * time.Second, // 增加到120秒，因为AI需要分析大量数据
+		Timeout:  180 * time.Second, // 增加到180秒，因为AI需要分析大量数据和复杂推理
 	}
 	return &defaultClient
 }
@@ -73,7 +73,7 @@ func (cfg *Client) SetCustomAPI(apiURL, apiKey, modelName string) {
 	}
 
 	cfg.Model = modelName
-	cfg.Timeout = 120 * time.Second
+	cfg.Timeout = 180 * time.Second
 }
 
 // SetClient 设置完整的AI配置（高级用户）
@@ -91,7 +91,7 @@ func (cfg *Client) CallWithMessages(systemPrompt, userPrompt string) (string, er
 	}
 
 	// 重试配置
-	maxRetries := 3
+	maxRetries := 5
 	var lastErr error
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -113,9 +113,13 @@ func (cfg *Client) CallWithMessages(systemPrompt, userPrompt string) (string, er
 			return "", err
 		}
 
-		// 重试前等待
+		// 重试前等待（指数退避）
 		if attempt < maxRetries {
-			waitTime := time.Duration(attempt) * 2 * time.Second
+			// 指数退避: 2s, 4s, 8s, 16s, 30s (最大30秒)
+			waitTime := time.Duration(1<<uint(attempt-1)) * 2 * time.Second
+			if waitTime > 30*time.Second {
+				waitTime = 30 * time.Second
+			}
 			fmt.Printf("⏳ 等待%v后重试...\n", waitTime)
 			time.Sleep(waitTime)
 		}
@@ -228,14 +232,17 @@ func (cfg *Client) callOnce(systemPrompt, userPrompt string) (string, error) {
 // isRetryableError 判断错误是否可重试
 func isRetryableError(err error) bool {
 	errStr := err.Error()
-	// 网络错误、超时、EOF等可以重试
+	// 网络错误、超时、服务繁忙、EOF等可以重试
 	retryableErrors := []string{
 		"EOF",
 		"timeout",
+		"deadline exceeded",     // context deadline exceeded
 		"connection reset",
 		"connection refused",
 		"temporary failure",
 		"no such host",
+		"status 503",            // Service Unavailable
+		"Service is too busy",   // DeepSeek specific error
 	}
 	for _, retryable := range retryableErrors {
 		if strings.Contains(errStr, retryable) {

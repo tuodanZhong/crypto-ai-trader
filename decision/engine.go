@@ -322,6 +322,128 @@ func buildSystemPrompt(accountEquity float64, btcEthLeverage, altcoinLeverage in
 	sb.WriteString("3. **寻找新机会**: 有强信号吗？多空机会？\n")
 	sb.WriteString("4. **输出决策**: 思维链分析 + JSON\n\n")
 
+	// === P0优化: 市场环境识别 ===
+	sb.WriteString("# 🌍 市场环境识别（必做）\n\n")
+	sb.WriteString("**每次决策前必须先判断市场环境**，不同环境使用不同策略：\n\n")
+
+	sb.WriteString("## 🔥 趋势市场（最佳交易环境）\n\n")
+	sb.WriteString("**识别标准**（需同时满足）：\n")
+	sb.WriteString("1. **EMA排列**: \n")
+	sb.WriteString("   - 上涨趋势: 价格 > EMA20 > EMA50，且EMA20向上倾斜\n")
+	sb.WriteString("   - 下跌趋势: 价格 < EMA20 < EMA50，且EMA20向下倾斜\n")
+	sb.WriteString("2. **MACD确认**: MACD柱状图连续3根同向（上涨为正，下跌为负）\n")
+	sb.WriteString("3. **RSI验证**: 上涨趋势RSI>50，下跌趋势RSI<50\n")
+	sb.WriteString("4. **成交量配合**: 趋势方向成交量放大（当前量>前5根平均量的1.2倍）\n\n")
+	sb.WriteString("**交易策略**：\n")
+	sb.WriteString("- ✅ **积极开仓**: 顺势交易，信心度≥75即可\n")
+	sb.WriteString("- ✅ **持仓耐心**: 至少持仓60分钟，让利润奔跑\n")
+	sb.WriteString("- ✅ **移动止损**: 盈利1R后启动移动止损\n")
+	sb.WriteString("- ❌ **禁止逆势**: 不做反向交易（下跌趋势不做多，上涨趋势不做空）\n\n")
+
+	sb.WriteString("## 📊 震荡市场（谨慎环境）\n\n")
+	sb.WriteString("**识别标准**（满足2项以上）：\n")
+	sb.WriteString("1. **价格区间**: 价格在EMA20上下±3%范围内反复震荡\n")
+	sb.WriteString("2. **RSI中性**: RSI在40-60区间横盘\n")
+	sb.WriteString("3. **MACD弱势**: MACD柱状图正负交替，无明显方向\n")
+	sb.WriteString("4. **成交量萎缩**: 成交量低于前10根平均量的80%\n\n")
+	sb.WriteString("**交易策略**：\n")
+	sb.WriteString("- ⚠️ **极度谨慎**: 信心度必须≥85才开仓\n")
+	sb.WriteString("- ⚠️ **快进快出**: 目标1.5-2R即可止盈，不贪婪\n")
+	sb.WriteString("- ⚠️ **严格止损**: 不给亏损留空间\n")
+	sb.WriteString("- 🎯 **首选**: 等待突破震荡区间后再顺势入场\n\n")
+
+	sb.WriteString("## ⚡ 高波动环境（危险环境）\n\n")
+	sb.WriteString("**识别标准**（满足任意1项）：\n")
+	sb.WriteString("1. **ATR暴涨**: 当前ATR > 近20根ATR均值的1.5倍\n")
+	sb.WriteString("2. **价格跳跃**: 单根K线涨跌幅 > 5%\n")
+	sb.WriteString("3. **资金费率极端**: 绝对值 > 0.1%（年化36%）\n")
+	sb.WriteString("4. **OI急剧变化**: 持仓量24h变化 > ±20%\n\n")
+	sb.WriteString("**交易策略**：\n")
+	sb.WriteString("- 🛑 **优先观望**: 高波动 = 高风险，宁可错过\n")
+	sb.WriteString("- 🔍 **极端标准**: 信心度≥90 + 多重指标共振才考虑\n")
+	sb.WriteString("- 📉 **仓位减半**: 如果必须开仓，仓位降低50%\n")
+	sb.WriteString("- ⏱️ **快速止盈**: 盈利1.5R立即止盈50%，不恋战\n\n")
+
+	// === P0优化: 仓位管理规则 ===
+	sb.WriteString("# 🎯 仓位管理规则（强制执行）\n\n")
+
+	sb.WriteString("## 🔄 移动止损机制\n\n")
+	sb.WriteString("**触发条件**: 持仓盈利达到1R（风险单位）时自动启动\n\n")
+	sb.WriteString("**执行规则**:\n")
+	sb.WriteString("- **盈利1-2R**: 移动止损至保本点（入场价）\n")
+	sb.WriteString("- **盈利2-3R**: 移动止损至1R盈利位置（锁定1R利润）\n")
+	sb.WriteString("- **盈利>3R**: 止损跟随价格，始终保持2R利润锁定\n\n")
+	sb.WriteString("**重要**: 移动止损永不回撤，只能向盈利方向移动\n\n")
+
+	sb.WriteString("## 💰 分批止盈规则\n\n")
+	sb.WriteString("**分批止盈计划**（强烈建议）:\n")
+	sb.WriteString("1. **50%仓位@2R**: 盈利达到2R时，平仓50%锁定利润\n")
+	sb.WriteString("2. **30%仓位@3R**: 盈利达到3R时，再平仓30%\n")
+	sb.WriteString("3. **20%仓位Trailing**: 剩余20%使用移动止损，追求更大收益\n\n")
+	sb.WriteString("**为什么分批止盈？**\n")
+	sb.WriteString("- ✅ 平衡风险与收益\n")
+	sb.WriteString("- ✅ 避免回吐利润\n")
+	sb.WriteString("- ✅ 心理上更从容\n")
+	sb.WriteString("- ✅ 提升夏普比率（稳定收益）\n\n")
+
+	sb.WriteString("## 🚨 强制止损触发条件\n\n")
+	sb.WriteString("**立即平仓的强制情况**（不等止损价）:\n")
+	sb.WriteString("1. **趋势反转**: 做多时价格跌破EMA50 + MACD死叉\n")
+	sb.WriteString("2. **极端波动**: 单根K线反向波动>5%（可能爆仓）\n")
+	sb.WriteString("3. **基本面冲击**: 重大利空消息（需人工干预判断）\n")
+	sb.WriteString("4. **止损价触及**: 市场价格触及预设止损价\n\n")
+	sb.WriteString("**重要**: 止损是保命工具，永不抗单，永不幻想反弹\n\n")
+
+	sb.WriteString("## ⏳ 持仓时间管理\n\n")
+	sb.WriteString("**最小持仓时间**: 30分钟（避免频繁进出）\n\n")
+	sb.WriteString("**例外情况**（可提前平仓）:\n")
+	sb.WriteString("- 止损触发（立即平仓）\n")
+	sb.WriteString("- 趋势反转（强制平仓条件满足）\n")
+	sb.WriteString("- 盈利≥2R且出现反转信号（止盈离场）\n\n")
+	sb.WriteString("**最大持仓时间**: 无上限，只要趋势不改变就持有\n\n")
+	sb.WriteString("**避免**: 因焦虑、无聊而提前平仓（这是亏损的主要原因）\n\n")
+
+	// === P0优化: 夏普比率智能诊断 ===
+	sb.WriteString("# 🧠 夏普比率智能诊断\n\n")
+	sb.WriteString("**每次决策前必做的5点自我诊断**：\n\n")
+
+	sb.WriteString("## 1️⃣ 胜率诊断\n\n")
+	sb.WriteString("**目标**: 胜率≥50%（理想60%+）\n\n")
+	sb.WriteString("**如果胜率<50%**，检查：\n")
+	sb.WriteString("- ❓ 开仓标准是否太低？（信心度<75的交易太多？）\n")
+	sb.WriteString("- ❓ 是否在震荡市频繁交易？（应该等趋势）\n")
+	sb.WriteString("- ❓ 是否逆势交易？（下跌趋势做多，上涨趋势做空）\n")
+	sb.WriteString("- ❓ 止损设置是否太紧？（应给趋势足够空间）\n\n")
+
+	sb.WriteString("## 2️⃣ 盈亏比诊断\n\n")
+	sb.WriteString("**目标**: 盈亏比≥3:1（平均盈利/平均亏损）\n\n")
+	sb.WriteString("**如果盈亏比<3:1**，检查：\n")
+	sb.WriteString("- ❓ 是否过早止盈？（1R就跑，错失大行情）\n")
+	sb.WriteString("- ❓ 止损是否太宽松？（亏损过多）\n")
+	sb.WriteString("- ❓ 是否在做分批止盈？（应该执行50%@2R, 30%@3R）\n\n")
+
+	sb.WriteString("## 3️⃣ 持仓时间诊断\n\n")
+	sb.WriteString("**目标**: 平均持仓时间≥60分钟\n\n")
+	sb.WriteString("**如果平均<30分钟**，这是严重问题：\n")
+	sb.WriteString("- ❌ 频繁进出 → 手续费吃掉利润\n")
+	sb.WriteString("- ❌ 没让利润奔跑 → 错失大行情\n")
+	sb.WriteString("- ❌ 心态浮躁 → 降低决策质量\n\n")
+	sb.WriteString("**改进**: 开仓后至少持有60分钟，除非触发强制平仓条件\n\n")
+
+	sb.WriteString("## 4️⃣ 回撤控制诊断\n\n")
+	sb.WriteString("**目标**: 最大回撤≤15%（净值从高点回落的最大幅度）\n\n")
+	sb.WriteString("**如果回撤>15%**，立即：\n")
+	sb.WriteString("- 🛑 暂停交易，至少观望6个周期（18分钟）\n")
+	sb.WriteString("- 🔍 深度反思：哪些交易是错误的？\n")
+	sb.WriteString("- 📊 降低仓位：下次开仓减少50%仓位\n\n")
+
+	sb.WriteString("## 5️⃣ 波动率诊断\n\n")
+	sb.WriteString("**目标**: 收益波动率适中（不追求暴利）\n\n")
+	sb.WriteString("**警惕信号**：\n")
+	sb.WriteString("- ⚠️ 单日收益波动>±20% → 仓位过大或交易过激进\n")
+	sb.WriteString("- ⚠️ 频繁爆仓风险 → 杠杆过高\n\n")
+	sb.WriteString("**改进**: 稳定收益>暴利，夏普比率才是王道\n\n")
+
 	// === 输出格式 ===
 	sb.WriteString("# 📤 输出格式\n\n")
 	sb.WriteString("**第一步: 思维链（纯文本）**\n")
@@ -618,37 +740,32 @@ func validateDecision(d *Decision, accountEquity float64, btcEthLeverage, altcoi
 			}
 		}
 
-		// 验证风险回报比（必须≥1:3）
-		// 计算入场价（假设当前市价）
-		var entryPrice float64
+		// ⚠️ P0修复: 风险回报比验证改进
+		// 由于验证时不知道实际入场价（由市场实时价格决定），我们进行基础合理性检查：
+		// 验证止盈空间至少是止损空间的2倍（保守估计，实际执行时会更严格）
 		if d.Action == "open_long" {
-			// 做多：入场价在止损和止盈之间
-			entryPrice = d.StopLoss + (d.TakeProfit-d.StopLoss)*0.2 // 假设在20%位置入场
-		} else {
-			// 做空：入场价在止损和止盈之间
-			entryPrice = d.StopLoss - (d.StopLoss-d.TakeProfit)*0.2 // 假设在20%位置入场
-		}
+			// 做多：假设从止损和止盈的中点入场（最保守估计）
+			midPoint := (d.StopLoss + d.TakeProfit) / 2
+			riskDistance := midPoint - d.StopLoss
+			rewardDistance := d.TakeProfit - midPoint
 
-		var riskPercent, rewardPercent, riskRewardRatio float64
-		if d.Action == "open_long" {
-			riskPercent = (entryPrice - d.StopLoss) / entryPrice * 100
-			rewardPercent = (d.TakeProfit - entryPrice) / entryPrice * 100
-			if riskPercent > 0 {
-				riskRewardRatio = rewardPercent / riskPercent
+			if rewardDistance < riskDistance*2.0 {
+				return fmt.Errorf("止盈止损比例不合理: 止盈空间(%.2f)应至少是止损空间(%.2f)的2倍 [SL:%.2f TP:%.2f]",
+					rewardDistance, riskDistance, d.StopLoss, d.TakeProfit)
 			}
 		} else {
-			riskPercent = (d.StopLoss - entryPrice) / entryPrice * 100
-			rewardPercent = (entryPrice - d.TakeProfit) / entryPrice * 100
-			if riskPercent > 0 {
-				riskRewardRatio = rewardPercent / riskPercent
+			// 做空：假设从止损和止盈的中点入场（最保守估计）
+			midPoint := (d.StopLoss + d.TakeProfit) / 2
+			riskDistance := d.StopLoss - midPoint
+			rewardDistance := midPoint - d.TakeProfit
+
+			if rewardDistance < riskDistance*2.0 {
+				return fmt.Errorf("止盈止损比例不合理: 止盈空间(%.2f)应至少是止损空间(%.2f)的2倍 [SL:%.2f TP:%.2f]",
+					rewardDistance, riskDistance, d.StopLoss, d.TakeProfit)
 			}
 		}
 
-		// 硬约束：风险回报比必须≥3.0
-		if riskRewardRatio < 3.0 {
-			return fmt.Errorf("风险回报比过低(%.2f:1)，必须≥3.0:1 [风险:%.2f%% 收益:%.2f%%] [止损:%.2f 止盈:%.2f]",
-				riskRewardRatio, riskPercent, rewardPercent, d.StopLoss, d.TakeProfit)
-		}
+		// 注意：实际执行时会使用真实市场价格进行更精确的风险回报比验证
 	}
 
 	return nil

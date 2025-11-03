@@ -589,6 +589,48 @@ func (at *AutoTrader) executeOpenLongWithRecord(decision *decision.Decision, act
 	actionRecord.Quantity = quantity
 	actionRecord.Price = marketData.CurrentPrice
 
+	// ⚠️ P0修复: 保证金预检查（防止超限开仓）
+	requiredMargin := decision.PositionSizeUSD / float64(decision.Leverage)
+	balance, err := at.trader.GetBalance()
+	if err != nil {
+		return fmt.Errorf("获取账户余额失败: %w", err)
+	}
+
+	totalWalletBalance := 0.0
+	totalUnrealizedProfit := 0.0
+	if wallet, ok := balance["totalWalletBalance"].(float64); ok {
+		totalWalletBalance = wallet
+	}
+	if unrealized, ok := balance["totalUnrealizedProfit"].(float64); ok {
+		totalUnrealizedProfit = unrealized
+	}
+	totalEquity := totalWalletBalance + totalUnrealizedProfit
+
+	// 计算当前已使用保证金
+	currentMarginUsed := 0.0
+	positions, err = at.trader.GetPositions()
+	if err == nil {
+		for _, pos := range positions {
+			qty := pos["positionAmt"].(float64)
+			if qty < 0 {
+				qty = -qty
+			}
+			markPrice := pos["markPrice"].(float64)
+			lev := 10 // 默认值
+			if leverage, ok := pos["leverage"].(float64); ok {
+				lev = int(leverage)
+			}
+			currentMarginUsed += (qty * markPrice) / float64(lev)
+		}
+	}
+
+	// 计算预估保证金使用率
+	estimatedMarginPct := (currentMarginUsed + requiredMargin) / totalEquity * 100
+	if estimatedMarginPct > 85.0 {
+		return fmt.Errorf("❌ 保证金不足: 预计使用率%.1f%% > 85%% 上限（当前%.1f%% + 新增%.1f%%）",
+			estimatedMarginPct, currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100)
+	}
+
 	// 开仓
 	order, err := at.trader.OpenLong(decision.Symbol, quantity, decision.Leverage)
 	if err != nil {
@@ -641,6 +683,48 @@ func (at *AutoTrader) executeOpenShortWithRecord(decision *decision.Decision, ac
 	quantity := decision.PositionSizeUSD / marketData.CurrentPrice
 	actionRecord.Quantity = quantity
 	actionRecord.Price = marketData.CurrentPrice
+
+	// ⚠️ P0修复: 保证金预检查（防止超限开仓）
+	requiredMargin := decision.PositionSizeUSD / float64(decision.Leverage)
+	balance, err := at.trader.GetBalance()
+	if err != nil {
+		return fmt.Errorf("获取账户余额失败: %w", err)
+	}
+
+	totalWalletBalance := 0.0
+	totalUnrealizedProfit := 0.0
+	if wallet, ok := balance["totalWalletBalance"].(float64); ok {
+		totalWalletBalance = wallet
+	}
+	if unrealized, ok := balance["totalUnrealizedProfit"].(float64); ok {
+		totalUnrealizedProfit = unrealized
+	}
+	totalEquity := totalWalletBalance + totalUnrealizedProfit
+
+	// 计算当前已使用保证金
+	currentMarginUsed := 0.0
+	positions, err = at.trader.GetPositions()
+	if err == nil {
+		for _, pos := range positions {
+			qty := pos["positionAmt"].(float64)
+			if qty < 0 {
+				qty = -qty
+			}
+			markPrice := pos["markPrice"].(float64)
+			lev := 10 // 默认值
+			if leverage, ok := pos["leverage"].(float64); ok {
+				lev = int(leverage)
+			}
+			currentMarginUsed += (qty * markPrice) / float64(lev)
+		}
+	}
+
+	// 计算预估保证金使用率
+	estimatedMarginPct := (currentMarginUsed + requiredMargin) / totalEquity * 100
+	if estimatedMarginPct > 85.0 {
+		return fmt.Errorf("❌ 保证金不足: 预计使用率%.1f%% > 85%% 上限（当前%.1f%% + 新增%.1f%%）",
+			estimatedMarginPct, currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100)
+	}
 
 	// 开仓
 	order, err := at.trader.OpenShort(decision.Symbol, quantity, decision.Leverage)

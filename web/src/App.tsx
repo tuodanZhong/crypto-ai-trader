@@ -73,11 +73,11 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // 切换页面时更新URL hash
-  const navigateToPage = (page: Page) => {
-    setCurrentPage(page);
-    window.location.hash = page === 'competition' ? '' : 'trader';
-  };
+  // 切换页面时更新URL hash (预留功能)
+  // const navigateToPage = (page: Page) => {
+  //   setCurrentPage(page);
+  //   window.location.hash = page === 'competition' ? '' : 'trader';
+  // };
 
   // 获取trader列表
   const { data: traders } = useSWR<TraderInfo[]>('traders', api.getTraders, {

@@ -8,6 +8,9 @@ interface HeaderProps {
 export function Header({ simple = false }: HeaderProps) {
   const { language, setLanguage } = useLanguage();
 
+  // 预留 simple 模式用于登录/注册页面
+  void simple;
+
   return (
     <header className="glass sticky top-0 z-50 backdrop-blur-xl">
       <div className="max-w-[1920px] mx-auto px-6 py-4">

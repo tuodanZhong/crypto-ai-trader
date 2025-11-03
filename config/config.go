@@ -46,8 +46,8 @@ type TraderConfig struct {
 
 // LeverageConfig 杠杆配置
 type LeverageConfig struct {
-	BTCETHLeverage  int `json:"btc_eth_leverage"` // BTC和ETH的杠杆倍数（主账户建议5-50，子账户≤5）
-	AltcoinLeverage int `json:"altcoin_leverage"` // 山寨币的杠杆倍数（主账户建议5-20，子账户≤5）
+	BTCETHLeverage  int `json:"btc_eth_leverage"` // BTC和ETH的杠杆倍数（建议5倍，最大20倍）
+	AltcoinLeverage int `json:"altcoin_leverage"` // 山寨币的杠杆倍数（建议5倍，最大15倍）
 }
 
 // Config 总配置

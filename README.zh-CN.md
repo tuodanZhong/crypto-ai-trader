@@ -616,8 +616,8 @@ cp config.json.example config.json
 | `initial_balance` | 用于P/L计算的起始余额 | `1000.0` | ✅ 是 |
 | `scan_interval_minutes` | 决策频率（分钟） | `3`（建议3-5） | ✅ 是 |
 | **`leverage`** | **杠杆配置 (v2.0.3+)** | 见下文 | ✅ 是 |
-| `btc_eth_leverage` | BTC/ETH最大杠杆<br>⚠️ 子账户：≤5倍 | `5`（默认，安全）<br>`50`（主账户最大） | ✅ 是 |
-| `altcoin_leverage` | 山寨币最大杠杆<br>⚠️ 子账户：≤5倍 | `5`（默认，安全）<br>`20`（主账户最大） | ✅ 是 |
+| `btc_eth_leverage` | BTC/ETH最大杠杆 | `5`（默认，安全）<br>`20`（系统最大） | ✅ 是 |
+| `altcoin_leverage` | 山寨币最大杠杆 | `5`（默认，安全）<br>`15`（系统最大） | ✅ 是 |
 | `use_default_coins` | 使用内置币种列表<br>**✨ 智能默认：`true`** (v2.0.2+)<br>未提供API时自动启用 | `true` 或省略 | ❌ 否<br>(可选，自动默认) |
 | `coin_pool_api_url` | 自定义币种池API<br>*仅当`use_default_coins: false`时需要* | `""`（空） | ❌ 否 |
 | `oi_top_api_url` | 持仓量API<br>*可选补充数据* | `""`（空） | ❌ 否 |
