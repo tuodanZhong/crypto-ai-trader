@@ -741,6 +741,22 @@ func validateDecision(d *Decision, accountEquity float64, btcEthLeverage, altcoi
 		}
 
 		// ⚠️ P0修复: 风险回报比验证改进
+		// ⚠️ 风险回报比验证 - 已禁用
+		//
+		// 原因: 使用midPoint=(SL+TP)/2作为假设入场价存在数学问题:
+		//   riskDistance = |SL - midPoint| = |SL - TP|/2
+		//   rewardDistance = |TP - midPoint| = |SL - TP|/2
+		//   → riskDistance 永远等于 rewardDistance (比例恒为1:1)
+		//   → 任何>1:1的验证要求都会拒绝所有交易
+		//
+		// 解决方案: 需要使用实际入场价(当前市价)进行验证，而不是midPoint
+		//
+		// 当前策略: 只验证TP/SL方向正确(上面已验证)，具体比例由AI根据System Prompt
+		//          中的"风险回报比≥1:3"要求自主判断
+		//
+		// 详细分析: 参考 CRITICAL_BUG_REPORT.md 和 FINAL_FIX_SUMMARY.md
+
+		/*
 		// 由于验证时不知道实际入场价（由市场实时价格决定），我们进行基础合理性检查：
 		// 验证止盈空间至少是止损空间的2倍（保守估计，实际执行时会更严格）
 		if d.Action == "open_long" {
@@ -766,6 +782,7 @@ func validateDecision(d *Decision, accountEquity float64, btcEthLeverage, altcoi
 		}
 
 		// 注意：实际执行时会使用真实市场价格进行更精确的风险回报比验证
+		*/
 	}
 
 	return nil

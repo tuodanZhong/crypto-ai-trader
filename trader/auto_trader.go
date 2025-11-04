@@ -624,12 +624,16 @@ func (at *AutoTrader) executeOpenLongWithRecord(decision *decision.Decision, act
 		}
 	}
 
-	// 计算预估保证金使用率
+	// 计算预估保证金使用率（仅用于日志记录）
 	estimatedMarginPct := (currentMarginUsed + requiredMargin) / totalEquity * 100
-	if estimatedMarginPct > 85.0 {
-		return fmt.Errorf("❌ 保证金不足: 预计使用率%.1f%% > 85%% 上限（当前%.1f%% + 新增%.1f%%）",
-			estimatedMarginPct, currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100)
-	}
+	log.Printf("📊 保证金使用率: 当前%.1f%% + 新增%.1f%% = 预计%.1f%%",
+		currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100, estimatedMarginPct)
+
+	// ⚠️ 保证金上限检查已禁用 - 用户要求移除85%限制
+	// if estimatedMarginPct > 85.0 {
+	// 	return fmt.Errorf("❌ 保证金不足: 预计使用率%.1f%% > 85%% 上限（当前%.1f%% + 新增%.1f%%）",
+	// 		estimatedMarginPct, currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100)
+	// }
 
 	// 开仓
 	order, err := at.trader.OpenLong(decision.Symbol, quantity, decision.Leverage)
@@ -719,12 +723,16 @@ func (at *AutoTrader) executeOpenShortWithRecord(decision *decision.Decision, ac
 		}
 	}
 
-	// 计算预估保证金使用率
+	// 计算预估保证金使用率（仅用于日志记录）
 	estimatedMarginPct := (currentMarginUsed + requiredMargin) / totalEquity * 100
-	if estimatedMarginPct > 85.0 {
-		return fmt.Errorf("❌ 保证金不足: 预计使用率%.1f%% > 85%% 上限（当前%.1f%% + 新增%.1f%%）",
-			estimatedMarginPct, currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100)
-	}
+	log.Printf("📊 保证金使用率: 当前%.1f%% + 新增%.1f%% = 预计%.1f%%",
+		currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100, estimatedMarginPct)
+
+	// ⚠️ 保证金上限检查已禁用 - 用户要求移除85%限制
+	// if estimatedMarginPct > 85.0 {
+	// 	return fmt.Errorf("❌ 保证金不足: 预计使用率%.1f%% > 85%% 上限（当前%.1f%% + 新增%.1f%%）",
+	// 		estimatedMarginPct, currentMarginUsed/totalEquity*100, requiredMargin/totalEquity*100)
+	// }
 
 	// 开仓
 	order, err := at.trader.OpenShort(decision.Symbol, quantity, decision.Leverage)
