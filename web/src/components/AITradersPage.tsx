@@ -91,12 +91,22 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
 
   // 检查模型是否正在被运行中的交易员使用
   const isModelInUse = (modelId: string) => {
-    return traders?.some(t => t.ai_model === modelId && t.is_running) || false;
+    return traders?.some(t => t.ai_model_unique_id === modelId && t.is_running) || false;
   };
 
   // 检查交易所是否正在被运行中的交易员使用
   const isExchangeInUse = (exchangeId: string) => {
-    return traders?.some(t => t.exchange_id === exchangeId && t.is_running) || false;
+    return traders?.some(t => t.exchange_unique_id === exchangeId && t.is_running) || false;
+  };
+
+  // 根据unique_id获取模型信息
+  const getModelByUniqueId = (uniqueId: string): AIModel | undefined => {
+    return allModels?.find(m => m.unique_id === uniqueId);
+  };
+
+  // 根据unique_id获取交易所信息
+  const getExchangeByUniqueId = (uniqueId: string): Exchange | undefined => {
+    return allExchanges?.find(e => e.unique_id === uniqueId);
   };
 
   const handleCreateTrader = async (modelId: string, exchangeId: string, name: string, initialBalance: number, customPrompt?: string, overrideBase?: boolean) => {
@@ -116,8 +126,8 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
       
       const request: CreateTraderRequest = {
         name,
-        ai_model_id: modelId,
-        exchange_id: exchangeId,
+        ai_model_unique_id: model?.unique_id || '',
+        exchange_unique_id: exchange?.unique_id || '',
         initial_balance: initialBalance,
         custom_prompt: customPrompt,
         override_base_prompt: overrideBase
@@ -174,26 +184,19 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
 
   const handleDeleteModelConfig = async (modelId: string) => {
     if (!confirm('确定要删除此AI模型配置吗？')) return;
-    
+
     try {
-      const updatedModels = allModels?.map(m => 
-        m.id === modelId ? { ...m, apiKey: '', enabled: false } : m
-      ) || [];
-      
-      const request = {
-        models: Object.fromEntries(
-          updatedModels.map(model => [
-            model.id,
-            {
-              enabled: model.enabled,
-              api_key: model.apiKey || ''
-            }
-          ])
-        )
-      };
-      
-      await api.updateModelConfigs(request);
-      setAllModels(updatedModels);
+      const modelToDelete = allModels?.find(m => m.id === modelId);
+      if (!modelToDelete?.unique_id) {
+        alert('无法找到模型配置');
+        return;
+      }
+
+      await api.deleteModelConfig(modelToDelete.unique_id);
+
+      // 重新获取模型列表
+      const refreshedModels = await api.getModelConfigs();
+      setAllModels(refreshedModels);
       setShowModelModal(false);
       setEditingModel(null);
     } catch (error) {
@@ -204,46 +207,28 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
 
   const handleSaveModelConfig = async (modelId: string, apiKey: string) => {
     try {
-      // 找到要配置的模型（从supportedModels中）
-      const modelToUpdate = supportedModels?.find(m => m.id === modelId);
-      if (!modelToUpdate) {
-        alert('模型不存在');
-        return;
+      // 查找现有配置
+      const existingModel = allModels?.find(m => m.id === modelId);
+
+      if (existingModel?.unique_id) {
+        // 更新现有配置
+        await api.updateModelConfig({
+          unique_id: existingModel.unique_id,
+          api_key: apiKey,
+          enabled: true
+        });
+      } else {
+        // 创建新配置
+        await api.createModelConfig({
+          model_id: modelId,
+          api_key: apiKey
+        });
       }
 
-      // 创建或更新用户的模型配置
-      const existingModel = allModels?.find(m => m.id === modelId);
-      let updatedModels;
-      
-      if (existingModel) {
-        // 更新现有配置
-        updatedModels = allModels?.map(m => 
-          m.id === modelId ? { ...m, apiKey, enabled: true } : m
-        ) || [];
-      } else {
-        // 添加新配置
-        const newModel = { ...modelToUpdate, apiKey, enabled: true };
-        updatedModels = [...(allModels || []), newModel];
-      }
-      
-      const request = {
-        models: Object.fromEntries(
-          updatedModels.map(model => [
-            model.id,
-            {
-              enabled: model.enabled,
-              api_key: model.apiKey || ''
-            }
-          ])
-        )
-      };
-      
-      await api.updateModelConfigs(request);
-      
       // 重新获取用户配置以确保数据同步
       const refreshedModels = await api.getModelConfigs();
       setAllModels(refreshedModels);
-      
+
       setShowModelModal(false);
       setEditingModel(null);
     } catch (error) {
@@ -254,28 +239,19 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
 
   const handleDeleteExchangeConfig = async (exchangeId: string) => {
     if (!confirm('确定要删除此交易所配置吗？')) return;
-    
+
     try {
-      const updatedExchanges = allExchanges?.map(e => 
-        e.id === exchangeId ? { ...e, apiKey: '', secretKey: '', enabled: false } : e
-      ) || [];
-      
-      const request = {
-        exchanges: Object.fromEntries(
-          updatedExchanges.map(exchange => [
-            exchange.id,
-            {
-              enabled: exchange.enabled,
-              api_key: exchange.apiKey || '',
-              secret_key: exchange.secretKey || '',
-              testnet: exchange.testnet || false
-            }
-          ])
-        )
-      };
-      
-      await api.updateExchangeConfigs(request);
-      setAllExchanges(updatedExchanges);
+      const exchangeToDelete = allExchanges?.find(e => e.id === exchangeId);
+      if (!exchangeToDelete?.unique_id) {
+        alert('无法找到交易所配置');
+        return;
+      }
+
+      await api.deleteExchangeConfig(exchangeToDelete.unique_id);
+
+      // 重新获取交易所列表
+      const refreshedExchanges = await api.getExchangeConfigs();
+      setAllExchanges(refreshedExchanges);
       setShowExchangeModal(false);
       setEditingExchange(null);
     } catch (error) {
@@ -286,52 +262,40 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
 
   const handleSaveExchangeConfig = async (exchangeId: string, apiKey: string, secretKey?: string, testnet?: boolean, hyperliquidWalletAddr?: string, asterUser?: string, asterSigner?: string, asterPrivateKey?: string) => {
     try {
-      // 找到要配置的交易所（从supportedExchanges中）
-      const exchangeToUpdate = supportedExchanges?.find(e => e.id === exchangeId);
-      if (!exchangeToUpdate) {
-        alert('交易所不存在');
-        return;
+      // 查找现有配置
+      const existingExchange = allExchanges?.find(e => e.id === exchangeId);
+
+      if (existingExchange?.unique_id) {
+        // 更新现有配置
+        await api.updateExchangeConfig({
+          unique_id: existingExchange.unique_id,
+          api_key: apiKey,
+          secret_key: secretKey,
+          testnet: testnet,
+          hyperliquid_wallet_addr: hyperliquidWalletAddr,
+          aster_user: asterUser,
+          aster_signer: asterSigner,
+          aster_private_key: asterPrivateKey,
+          enabled: true
+        });
+      } else {
+        // 创建新配置
+        await api.createExchangeConfig({
+          exchange_id: exchangeId,
+          api_key: apiKey,
+          secret_key: secretKey,
+          testnet: testnet,
+          hyperliquid_wallet_addr: hyperliquidWalletAddr,
+          aster_user: asterUser,
+          aster_signer: asterSigner,
+          aster_private_key: asterPrivateKey
+        });
       }
 
-      // 创建或更新用户的交易所配置
-      const existingExchange = allExchanges?.find(e => e.id === exchangeId);
-      let updatedExchanges;
-      
-      if (existingExchange) {
-        // 更新现有配置
-        updatedExchanges = allExchanges?.map(e => 
-          e.id === exchangeId ? { ...e, apiKey, secretKey, testnet, hyperliquidWalletAddr, asterUser, asterSigner, asterPrivateKey, enabled: true } : e
-        ) || [];
-      } else {
-        // 添加新配置
-        const newExchange = { ...exchangeToUpdate, apiKey, secretKey, testnet, hyperliquidWalletAddr, asterUser, asterSigner, asterPrivateKey, enabled: true };
-        updatedExchanges = [...(allExchanges || []), newExchange];
-      }
-      
-      const request = {
-        exchanges: Object.fromEntries(
-          updatedExchanges.map(exchange => [
-            exchange.id,
-            {
-              enabled: exchange.enabled,
-              api_key: exchange.apiKey || '',
-              secret_key: exchange.secretKey || '',
-              testnet: exchange.testnet || false,
-              hyperliquid_wallet_addr: exchange.hyperliquidWalletAddr || '',
-              aster_user: exchange.asterUser || '',
-              aster_signer: exchange.asterSigner || '',
-              aster_private_key: exchange.asterPrivateKey || ''
-            }
-          ])
-        )
-      };
-      
-      await api.updateExchangeConfigs(request);
-      
       // 重新获取用户配置以确保数据同步
       const refreshedExchanges = await api.getExchangeConfigs();
       setAllExchanges(refreshedExchanges);
-      
+
       setShowExchangeModal(false);
       setEditingExchange(null);
     } catch (error) {
@@ -525,8 +489,8 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
                    style={{ background: '#0B0E11', border: '1px solid #2B3139' }}>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
-                       style={{ 
-                         background: trader.ai_model.includes('deepseek') ? '#60a5fa' : '#c084fc',
+                       style={{
+                         background: getModelByUniqueId(trader.ai_model_unique_id)?.provider?.includes('deepseek') ? '#60a5fa' : '#c084fc',
                          color: '#fff'
                        }}>
                     🤖
@@ -535,10 +499,10 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
                     <div className="font-bold text-lg" style={{ color: '#EAECEF' }}>
                       {trader.trader_name}
                     </div>
-                    <div className="text-sm" style={{ 
-                      color: trader.ai_model.includes('deepseek') ? '#60a5fa' : '#c084fc' 
+                    <div className="text-sm" style={{
+                      color: getModelByUniqueId(trader.ai_model_unique_id)?.provider?.includes('deepseek') ? '#60a5fa' : '#c084fc'
                     }}>
-                      {getModelDisplayName(trader.ai_model.split('_').pop() || trader.ai_model)} Model • {trader.exchange_id?.toUpperCase()}
+                      {getModelDisplayName(getModelByUniqueId(trader.ai_model_unique_id)?.provider || 'unknown')} Model • {getExchangeByUniqueId(trader.exchange_unique_id)?.id?.toUpperCase() || 'UNKNOWN'}
                     </div>
                   </div>
                 </div>

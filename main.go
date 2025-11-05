@@ -114,9 +114,8 @@ func main() {
 			if trader.IsRunning {
 				status = "运行中"
 			}
-			fmt.Printf("  • %s (%s + %s) - 初始资金: %.0f USDT [%s]\n",
-				trader.Name, strings.ToUpper(trader.AIModelID), strings.ToUpper(trader.ExchangeID), 
-				trader.InitialBalance, status)
+			fmt.Printf("  • %s - 初始资金: %.0f USDT [%s]\n",
+				trader.Name, trader.InitialBalance, status)
 		}
 	}
 

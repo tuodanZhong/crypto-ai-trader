@@ -63,6 +63,9 @@ type AutoTraderConfig struct {
 	MaxDailyLoss    float64       // 最大日亏损百分比（提示）
 	MaxDrawdown     float64       // 最大回撤百分比（提示）
 	StopTradingTime time.Duration // 触发风控后暂停时长
+
+	// 币种池配置
+	AI500CoinLimit int // AI500分析币种数量（默认20）
 }
 
 // AutoTrader 自动交易器
@@ -479,7 +482,10 @@ func (at *AutoTrader) buildTradingContext() (*decision.Context, error) {
 	// 3. 获取合并的候选币种池（AI500 + OI Top，去重）
 	// 无论有没有持仓，都分析相同数量的币种（让AI看到所有好机会）
 	// AI会根据保证金使用率和现有持仓情况，自己决定是否要换仓
-	const ai500Limit = 20 // AI500取前20个评分最高的币种
+	ai500Limit := at.config.AI500CoinLimit
+	if ai500Limit <= 0 {
+		ai500Limit = 20 // 默认20个币种
+	}
 
 	// 获取合并后的币种池（AI500 + OI Top）
 	mergedPool, err := pool.GetMergedCoinPool(ai500Limit)

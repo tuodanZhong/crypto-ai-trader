@@ -336,7 +336,8 @@ func (l *DecisionLogger) AnalyzePerformance(lookbackCycles int) (*PerformanceAna
 
 	// 为了避免开仓记录在窗口外导致匹配失败，需要先从所有历史记录中找出未平仓的持仓
 	// 获取更多历史记录来构建完整的持仓状态（使用更大的窗口）
-	allRecords, err := l.GetLatestRecords(lookbackCycles * 3) // 扩大3倍窗口
+	// 扩大10倍窗口以确保捕获所有交易对
+	allRecords, err := l.GetLatestRecords(lookbackCycles * 10)
 	if err == nil && len(allRecords) > len(records) {
 		// 先从扩大的窗口中收集所有开仓记录
 		for _, record := range allRecords {
@@ -501,6 +502,15 @@ func (l *DecisionLogger) AnalyzePerformance(lookbackCycles int) (*PerformanceAna
 			// 只有盈利没有亏损的情况，设置为一个很大的值表示完美策略
 			analysis.ProfitFactor = 999.0
 		}
+
+		// 调试日志
+		fmt.Printf("📊 交易统计: 总计%d笔 | 盈利%d笔(%.2f USDT) | 亏损%d笔(%.2f USDT) | 胜率%.1f%% | 盈亏比%.2f\n",
+			analysis.TotalTrades,
+			analysis.WinningTrades, analysis.AvgWin,
+			analysis.LosingTrades, analysis.AvgLoss,
+			analysis.WinRate, analysis.ProfitFactor)
+	} else {
+		fmt.Printf("⚠️ 交易统计: 无完整交易记录（可能都是观望或持仓未平仓）\n")
 	}
 
 	// 计算各币种胜率和平均盈亏

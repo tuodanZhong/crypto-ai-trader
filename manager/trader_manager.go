@@ -88,19 +88,19 @@ func (tm *TraderManager) LoadTradersFromDatabase(database *config.Database) erro
 
 		var aiModelCfg *config.AIModelConfig
 		for _, model := range aiModels {
-			if model.ID == traderCfg.AIModelID {
+			if model.UniqueID == traderCfg.AIModelUniqueID {
 				aiModelCfg = model
 				break
 			}
 		}
 
 		if aiModelCfg == nil {
-			log.Printf("⚠️  交易员 %s 的AI模型 %s 不存在，跳过", traderCfg.Name, traderCfg.AIModelID)
+			log.Printf("⚠️  交易员 %s 的AI模型 %s 不存在，跳过", traderCfg.Name, traderCfg.AIModelUniqueID)
 			continue
 		}
 
 		if !aiModelCfg.Enabled {
-			log.Printf("⚠️  交易员 %s 的AI模型 %s 未启用，跳过", traderCfg.Name, traderCfg.AIModelID)
+			log.Printf("⚠️  交易员 %s 的AI模型 %s 未启用，跳过", traderCfg.Name, traderCfg.AIModelUniqueID)
 			continue
 		}
 
@@ -113,19 +113,19 @@ func (tm *TraderManager) LoadTradersFromDatabase(database *config.Database) erro
 
 		var exchangeCfg *config.ExchangeConfig
 		for _, exchange := range exchanges {
-			if exchange.ID == traderCfg.ExchangeID {
+			if exchange.UniqueID == traderCfg.ExchangeUniqueID {
 				exchangeCfg = exchange
 				break
 			}
 		}
 
 		if exchangeCfg == nil {
-			log.Printf("⚠️  交易员 %s 的交易所 %s 不存在，跳过", traderCfg.Name, traderCfg.ExchangeID)
+			log.Printf("⚠️  交易员 %s 的交易所 %s 不存在，跳过", traderCfg.Name, traderCfg.ExchangeUniqueID)
 			continue
 		}
 
 		if !exchangeCfg.Enabled {
-			log.Printf("⚠️  交易员 %s 的交易所 %s 未启用，跳过", traderCfg.Name, traderCfg.ExchangeID)
+			log.Printf("⚠️  交易员 %s 的交易所 %s 未启用，跳过", traderCfg.Name, traderCfg.ExchangeUniqueID)
 			continue
 		}
 
@@ -145,6 +145,12 @@ func (tm *TraderManager) LoadTradersFromDatabase(database *config.Database) erro
 func (tm *TraderManager) addTraderFromDB(traderCfg *config.TraderRecord, aiModelCfg *config.AIModelConfig, exchangeCfg *config.ExchangeConfig, coinPoolURL string, maxDailyLoss, maxDrawdown float64, stopTradingMinutes, btcEthLeverage, altcoinLeverage int) error {
 	if _, exists := tm.traders[traderCfg.ID]; exists {
 		return fmt.Errorf("trader ID '%s' 已存在", traderCfg.ID)
+	}
+
+	// 获取AI500币种数量配置
+	ai500CoinLimit := 20 // 默认值
+	if traderCfg.AI500CoinLimit > 0 {
+		ai500CoinLimit = traderCfg.AI500CoinLimit
 	}
 
 	// 构建AutoTraderConfig
@@ -168,6 +174,7 @@ func (tm *TraderManager) addTraderFromDB(traderCfg *config.TraderRecord, aiModel
 		StopTradingTime:       time.Duration(stopTradingMinutes) * time.Minute,
 		BTCETHLeverage:        btcEthLeverage,
 		AltcoinLeverage:       altcoinLeverage,
+		AI500CoinLimit:        ai500CoinLimit,
 	}
 
 	// 根据交易所类型设置API密钥
@@ -523,19 +530,19 @@ func (tm *TraderManager) LoadUserTraders(database *config.Database, userID strin
 
 		var aiModelCfg *config.AIModelConfig
 		for _, model := range aiModels {
-			if model.ID == traderCfg.AIModelID {
+			if model.UniqueID == traderCfg.AIModelUniqueID {
 				aiModelCfg = model
 				break
 			}
 		}
 
 		if aiModelCfg == nil {
-			log.Printf("⚠️ 交易员 %s 的AI模型 %s 不存在，跳过", traderCfg.Name, traderCfg.AIModelID)
+			log.Printf("⚠️ 交易员 %s 的AI模型 %s 不存在，跳过", traderCfg.Name, traderCfg.AIModelUniqueID)
 			continue
 		}
 
 		if !aiModelCfg.Enabled {
-			log.Printf("⚠️ 交易员 %s 的AI模型 %s 未启用，跳过", traderCfg.Name, traderCfg.AIModelID)
+			log.Printf("⚠️ 交易员 %s 的AI模型 %s 未启用，跳过", traderCfg.Name, traderCfg.AIModelUniqueID)
 			continue
 		}
 
@@ -548,19 +555,19 @@ func (tm *TraderManager) LoadUserTraders(database *config.Database, userID strin
 
 		var exchangeCfg *config.ExchangeConfig
 		for _, exchange := range exchanges {
-			if exchange.ID == traderCfg.ExchangeID {
+			if exchange.UniqueID == traderCfg.ExchangeUniqueID {
 				exchangeCfg = exchange
 				break
 			}
 		}
 
 		if exchangeCfg == nil {
-			log.Printf("⚠️ 交易员 %s 的交易所 %s 不存在，跳过", traderCfg.Name, traderCfg.ExchangeID)
+			log.Printf("⚠️ 交易员 %s 的交易所 %s 不存在，跳过", traderCfg.Name, traderCfg.ExchangeUniqueID)
 			continue
 		}
 
 		if !exchangeCfg.Enabled {
-			log.Printf("⚠️ 交易员 %s 的交易所 %s 未启用，跳过", traderCfg.Name, traderCfg.ExchangeID)
+			log.Printf("⚠️ 交易员 %s 的交易所 %s 未启用，跳过", traderCfg.Name, traderCfg.ExchangeUniqueID)
 			continue
 		}
 

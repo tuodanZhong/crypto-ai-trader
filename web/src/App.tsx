@@ -22,25 +22,7 @@ import type {
 
 type Page = 'competition' | 'traders' | 'trader';
 
-// 获取友好的AI模型名称
-function getModelDisplayName(modelId: string): string {
-  switch (modelId.toLowerCase()) {
-    case 'deepseek':
-      return 'DeepSeek';
-    case 'qwen':
-      return 'Qwen';
-    case 'claude':
-      return 'Claude';
-    case 'gpt4':
-    case 'gpt-4':
-      return 'GPT-4';
-    case 'gpt3.5':
-    case 'gpt-3.5':
-      return 'GPT-3.5';
-    default:
-      return modelId.toUpperCase();
-  }
-}
+// Note: getModelDisplayName removed - using trader_name instead
 
 function App() {
   const { language, setLanguage } = useLanguage();
@@ -455,7 +437,7 @@ function TraderDetailsPage({
           )}
         </div>
         <div className="flex items-center gap-4 text-sm" style={{ color: '#848E9C' }}>
-          <span>AI Model: <span className="font-semibold" style={{ color: selectedTrader.ai_model.includes('qwen') ? '#c084fc' : '#60a5fa' }}>{getModelDisplayName(selectedTrader.ai_model.split('_').pop() || selectedTrader.ai_model)}</span></span>
+          <span>Trader: <span className="font-semibold" style={{ color: '#60a5fa' }}>{selectedTrader.trader_name}</span></span>
           {status && (
             <>
               <span>•</span>

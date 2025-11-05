@@ -8,7 +8,9 @@ import type {
   AIModel,
   Exchange,
   CreateTraderRequest,
+  CreateModelConfigRequest,
   UpdateModelConfigRequest,
+  CreateExchangeConfigRequest,
   UpdateExchangeConfigRequest,
   CompetitionData,
 } from '../types';
@@ -98,13 +100,40 @@ export const api = {
     return res.json();
   },
 
-  async updateModelConfigs(request: UpdateModelConfigRequest): Promise<void> {
+  async createModelConfig(request: CreateModelConfigRequest): Promise<AIModel> {
+    const res = await fetch(`${API_BASE}/models`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '创建模型配置失败');
+    }
+    return res.json();
+  },
+
+  async updateModelConfig(request: UpdateModelConfigRequest): Promise<void> {
     const res = await fetch(`${API_BASE}/models`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(request),
     });
-    if (!res.ok) throw new Error('更新模型配置失败');
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '更新模型配置失败');
+    }
+  },
+
+  async deleteModelConfig(uniqueId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/models/${uniqueId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '删除模型配置失败');
+    }
   },
 
   // 交易所配置接口
@@ -123,13 +152,40 @@ export const api = {
     return res.json();
   },
 
-  async updateExchangeConfigs(request: UpdateExchangeConfigRequest): Promise<void> {
+  async createExchangeConfig(request: CreateExchangeConfigRequest): Promise<Exchange> {
+    const res = await fetch(`${API_BASE}/exchanges`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '创建交易所配置失败');
+    }
+    return res.json();
+  },
+
+  async updateExchangeConfig(request: UpdateExchangeConfigRequest): Promise<void> {
     const res = await fetch(`${API_BASE}/exchanges`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(request),
     });
-    if (!res.ok) throw new Error('更新交易所配置失败');
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '更新交易所配置失败');
+    }
+  },
+
+  async deleteExchangeConfig(uniqueId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/exchanges/${uniqueId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || '删除交易所配置失败');
+    }
   },
 
   // 获取系统状态（支持trader_id）

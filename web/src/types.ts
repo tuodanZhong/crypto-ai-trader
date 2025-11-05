@@ -88,24 +88,33 @@ export interface Statistics {
 export interface TraderInfo {
   trader_id: string;
   trader_name: string;
-  ai_model: string;
-  exchange_id?: string;
+  ai_model_unique_id: string;  // 更新为unique_id
+  exchange_unique_id: string;  // 更新为unique_id
   is_running?: boolean;
   custom_prompt?: string;
+  initial_balance?: number;
 }
 
 export interface AIModel {
+  unique_id: string;  // 新增unique_id
   id: string;
+  user_id?: string;
   name: string;
   provider: string;
+  config_alias?: string;  // 新增配置别名
   enabled: boolean;
   apiKey?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Exchange {
+  unique_id: string;  // 新增unique_id
   id: string;
+  user_id?: string;
   name: string;
-  type: 'cex' | 'dex';
+  type: 'cex' | 'dex' | string;
+  config_alias?: string;  // 新增配置别名
   enabled: boolean;
   apiKey?: string;
   secretKey?: string;
@@ -116,41 +125,59 @@ export interface Exchange {
   asterUser?: string;
   asterSigner?: string;
   asterPrivateKey?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateTraderRequest {
   name: string;
-  ai_model_id: string;
-  exchange_id: string;
+  ai_model_unique_id: string;  // 更新为unique_id
+  exchange_unique_id: string;  // 更新为unique_id
   initial_balance: number;
   custom_prompt?: string;
   override_base_prompt?: boolean;
 }
 
-export interface UpdateModelConfigRequest {
-  models: {
-    [key: string]: {
-      enabled: boolean;
-      api_key: string;
-    };
-  };
+// 创建AI模型配置请求
+export interface CreateModelConfigRequest {
+  model_id: string;
+  config_alias?: string;
+  api_key: string;
 }
 
+// 更新AI模型配置请求
+export interface UpdateModelConfigRequest {
+  unique_id: string;
+  config_alias?: string;
+  api_key?: string;
+  enabled: boolean;
+}
+
+// 创建交易所配置请求
+export interface CreateExchangeConfigRequest {
+  exchange_id: string;
+  config_alias?: string;
+  api_key?: string;
+  secret_key?: string;
+  testnet?: boolean;
+  hyperliquid_wallet_addr?: string;
+  aster_user?: string;
+  aster_signer?: string;
+  aster_private_key?: string;
+}
+
+// 更新交易所配置请求
 export interface UpdateExchangeConfigRequest {
-  exchanges: {
-    [key: string]: {
-      enabled: boolean;
-      api_key: string;
-      secret_key: string;
-      testnet?: boolean;
-      // Hyperliquid 特定字段
-      hyperliquid_wallet_addr?: string;
-      // Aster 特定字段
-      aster_user?: string;
-      aster_signer?: string;
-      aster_private_key?: string;
-    };
-  };
+  unique_id: string;
+  config_alias?: string;
+  api_key?: string;
+  secret_key?: string;
+  testnet?: boolean;
+  hyperliquid_wallet_addr?: string;
+  aster_user?: string;
+  aster_signer?: string;
+  aster_private_key?: string;
+  enabled: boolean;
 }
 
 // Competition related types

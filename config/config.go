@@ -42,6 +42,9 @@ type TraderConfig struct {
 
 	InitialBalance      float64 `json:"initial_balance"`
 	ScanIntervalMinutes int     `json:"scan_interval_minutes"`
+
+	// 币种池配置
+	AI500CoinLimit int `json:"ai500_coin_limit,omitempty"` // AI500分析币种数量（默认20，可设置更多）
 }
 
 // LeverageConfig 杠杆配置
