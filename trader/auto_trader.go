@@ -594,6 +594,7 @@ func (at *AutoTrader) executeOpenLongWithRecord(decision *decision.Decision, act
 	quantity := decision.PositionSizeUSD / marketData.CurrentPrice
 	actionRecord.Quantity = quantity
 	actionRecord.Price = marketData.CurrentPrice
+	actionRecord.Leverage = decision.Leverage // 记录杠杆倍数
 
 	// ⚠️ P0修复: 保证金预检查（防止超限开仓）
 	requiredMargin := decision.PositionSizeUSD / float64(decision.Leverage)
@@ -693,6 +694,7 @@ func (at *AutoTrader) executeOpenShortWithRecord(decision *decision.Decision, ac
 	quantity := decision.PositionSizeUSD / marketData.CurrentPrice
 	actionRecord.Quantity = quantity
 	actionRecord.Price = marketData.CurrentPrice
+	actionRecord.Leverage = decision.Leverage // 记录杠杆倍数
 
 	// ⚠️ P0修复: 保证金预检查（防止超限开仓）
 	requiredMargin := decision.PositionSizeUSD / float64(decision.Leverage)
@@ -779,6 +781,23 @@ func (at *AutoTrader) executeCloseLongWithRecord(decision *decision.Decision, ac
 	}
 	actionRecord.Price = marketData.CurrentPrice
 
+	// ⚠️ 修复: 在平仓前获取实际持仓数量,用于统计分析
+	positions, err := at.trader.GetPositions()
+	if err == nil {
+		for _, pos := range positions {
+			if pos["symbol"] == decision.Symbol && pos["side"] == "long" {
+				if qty, ok := pos["positionAmt"].(float64); ok {
+					if qty < 0 {
+						qty = -qty // 确保数量为正
+					}
+					actionRecord.Quantity = qty
+					log.Printf("  📊 准备平仓数量: %.4f", qty)
+					break
+				}
+			}
+		}
+	}
+
 	// 平仓
 	order, err := at.trader.CloseLong(decision.Symbol, 0) // 0 = 全部平仓
 	if err != nil {
@@ -804,6 +823,23 @@ func (at *AutoTrader) executeCloseShortWithRecord(decision *decision.Decision, a
 		return err
 	}
 	actionRecord.Price = marketData.CurrentPrice
+
+	// ⚠️ 修复: 在平仓前获取实际持仓数量,用于统计分析
+	positions, err := at.trader.GetPositions()
+	if err == nil {
+		for _, pos := range positions {
+			if pos["symbol"] == decision.Symbol && pos["side"] == "short" {
+				if qty, ok := pos["positionAmt"].(float64); ok {
+					if qty < 0 {
+						qty = -qty // 确保数量为正
+					}
+					actionRecord.Quantity = qty
+					log.Printf("  📊 准备平仓数量: %.4f", qty)
+					break
+				}
+			}
+		}
+	}
 
 	// 平仓
 	order, err := at.trader.CloseShort(decision.Symbol, 0) // 0 = 全部平仓
